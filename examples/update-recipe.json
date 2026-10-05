@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "skill_name": "summarize-interviews",
+  "description": "Summarizes supplied interview notes with source-linked observations and preserved disagreements. Use when synthesizing anonymized interviews.",
+  "scope": "Summarize anonymized interview notes using only supplied evidence.",
+  "steps": [
+    "Identify supplied excerpt IDs.",
+    "Group observations and cite their excerpt IDs.",
+    "Label analyst interpretations separately.",
+    "Retain opposing preferences as separate source-linked observations."
+  ],
+  "checks": [
+    "Every observation cites a supplied excerpt ID.",
+    "No invented participant facts or motivations.",
+    "Disagreement is not converted into consensus."
+  ],
+  "pitfalls": [
+    "Do not present an interpretation as a direct observation.",
+    "A majority preference does not erase a minority preference."
+  ],
+  "lesson_indices": [0],
+  "validation": {
+    "case": "Fictional I5 prefers a guided setup; I6 prefers skipping setup.",
+    "expected": "Two source-linked preferences; explicit disagreement.",
+    "actual": "Guided setup preferred [I5]; skipping setup preferred [I6]. Preferences disagree.",
+    "passed": true
+  }
+}

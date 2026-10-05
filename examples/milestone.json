@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "session_id": "synthetic-session-1",
+  "milestone_id": "interview-1",
+  "skill_name": "summarize-interviews",
+  "scope": "Summarize anonymized interview notes using only supplied evidence.",
+  "task": "Summarize fictional interview excerpts I1 through I3.",
+  "outcome": "success",
+  "verified": true,
+  "lessons": [{
+    "kind": "correction",
+    "finding": "Separate participant observations from analyst interpretations.",
+    "evidence": "The revised summary linked each observation to a supplied excerpt; interpretation was labeled separately."
+  }]
+}

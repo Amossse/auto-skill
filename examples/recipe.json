@@ -1,0 +1,23 @@
+{
+  "schema_version": 1,
+  "skill_name": "summarize-interviews",
+  "description": "Summarizes supplied interview notes with source-linked observations. Use when synthesizing anonymized interviews.",
+  "scope": "Summarize anonymized interview notes using only supplied evidence.",
+  "steps": [
+    "Identify supplied excerpt IDs.",
+    "Group observations and cite their excerpt IDs.",
+    "Label analyst interpretations separately."
+  ],
+  "checks": [
+    "Every observation cites a supplied excerpt ID.",
+    "No invented participant facts or motivations."
+  ],
+  "pitfalls": ["Do not present an interpretation as a direct observation."],
+  "lesson_indices": [0],
+  "validation": {
+    "case": "Fictional excerpt I4: The participant prefers fewer setup screens.",
+    "expected": "Source-linked observation; no invented motivation.",
+    "actual": "Observation: fewer setup screens preferred [I4]. Motivation: not established.",
+    "passed": true
+  }
+}

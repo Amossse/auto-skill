@@ -1,0 +1,267 @@
+import copy
+import io
+import json
+import tempfile
+import unittest
+from pathlib import Path
+from unittest.mock import patch
+
+from auto_skill import cli
+
+REPO = Path(__file__).resolve().parents[1]
+EVENT = json.loads((REPO / "examples/milestone.json").read_text())
+RECIPE = json.loads((REPO / "examples/recipe.json").read_text())
+UPDATE = json.loads((REPO / "examples/update-milestone.json").read_text())
+UPDATE_RECIPE = json.loads((REPO / "examples/update-recipe.json").read_text())
+
+
+class Lifecycle(unittest.TestCase):
+    def setUp(self):
+        self.temp = tempfile.TemporaryDirectory()
+        self.addCleanup(self.temp.cleanup)
+        self.root = Path(self.temp.name)
+        self.store = cli.Store(self.root)
+        cli.install(self.store, "all", "python3", False)
+
+    def assess(self, item=EVENT):
+        return cli.assess(self.store, self.store.state(), copy.deepcopy(item))
+
+    def grant(self):
+        cli.consent(self.store, self.store.state(), EVENT["skill_name"], "approve")
+
+    def save(self, value=RECIPE):
+        return cli.save(self.store, self.store.state(), copy.deepcopy(value))
+
+    def create(self):
+        self.assess()
+        self.grant()
+        self.save()
+
+    def test_first_prompt_creates_nothing_and_repeat_does_not_nag(self):
+        self.assertEqual(self.assess()["action"], "ask")
+        self.assertFalse((self.root / ".agents/skills/summarize-interviews").exists())
+        self.assertEqual(self.assess()["action"], "pending_consent")
+        other_session = dict(EVENT, session_id="session-2")
+        self.assertEqual(self.assess(other_session)["action"], "pending_consent")
+
+    def test_consent_is_required(self):
+        self.assess()
+        with self.assertRaisesRegex(cli.Error, "consent_required"):
+            self.save()
+        with self.assertRaisesRegex(cli.Error, "no_pending_milestone"):
+            cli.consent(self.store, self.store.state(), "other-topic", "approve")
+
+    def test_decline_persists_and_explicit_approve_resumes(self):
+        self.assess()
+        cli.consent(self.store, self.store.state(), EVENT["skill_name"], "decline")
+        self.assertEqual(self.assess(UPDATE)["reason"], "decline")
+        self.grant()
+        self.assertEqual(self.assess()["action"], "create")
+
+    def test_verified_reusable_milestone_required(self):
+        for item in (dict(EVENT, outcome="failure"), dict(EVENT, verified=False), dict(EVENT, lessons=[])):
+            self.assertEqual(self.assess(item)["action"], "skip")
+        self.assertEqual(self.store.state()["pending"], {})
+
+    def test_update_retains_procedure_mirrors_and_history(self):
+        self.create()
+        self.assertEqual(self.assess(UPDATE)["action"], "update")
+        self.assertEqual(self.save(UPDATE_RECIPE)["revision"], 2)
+        a = self.store.read(".agents/skills/summarize-interviews/SKILL.md")
+        b = self.store.read(".claude/skills/summarize-interviews/SKILL.md")
+        self.assertEqual(a, b)
+        self.assertIn("Label analyst interpretations", a)
+        self.assertIn("opposing preferences", a)
+        prior = json.loads(self.store.read(".auto-skill/history/summarize-interviews/1.json"))
+        self.assertEqual(prior["event"], EVENT)
+        self.assertEqual(prior["recipe"], RECIPE)
+
+    def test_saved_event_is_idempotent(self):
+        self.create()
+        self.assertEqual(self.assess()["reason"], "already_saved")
+
+    def test_scope_change_requires_new_consent(self):
+        self.create()
+        new = dict(UPDATE, scope="Different broader scope.")
+        self.assertEqual(self.assess(new)["action"], "ask")
+        with self.assertRaisesRegex(cli.Error, "scope_mismatch"):
+            self.save(UPDATE_RECIPE)
+        with self.assertRaisesRegex(cli.Error, "consent_required"):
+            self.save(dict(UPDATE_RECIPE, scope=new["scope"]))
+
+    def test_pause_keeps_existing_skill(self):
+        self.create()
+        cli.consent(self.store, self.store.state(), EVENT["skill_name"], "pause")
+        self.assertEqual(self.assess(UPDATE)["reason"], "pause")
+        self.assertIsNotNone(self.store.read(".agents/skills/summarize-interviews/SKILL.md"))
+
+    def test_manual_edit_is_never_overwritten(self):
+        self.create()
+        path = ".agents/skills/summarize-interviews/SKILL.md"
+        self.store.write(path, "human edit")
+        self.assess(UPDATE)
+        with self.assertRaisesRegex(cli.Error, "manual_edit_conflict"):
+            self.save(UPDATE_RECIPE)
+        self.assertEqual(self.store.read(path), "human edit")
+
+    def test_unmanaged_skill_is_preserved(self):
+        self.store.write(".claude/skills/summarize-interviews/SKILL.md", "existing")
+        self.assess()
+        self.grant()
+        with self.assertRaisesRegex(cli.Error, "unmanaged_skill_exists"):
+            self.save()
+
+    def test_rollback_restores_content_as_new_version(self):
+        self.create()
+        old = self.store.read(".agents/skills/summarize-interviews/SKILL.md")
+        self.assess(UPDATE)
+        self.save(UPDATE_RECIPE)
+        result = cli.rollback(self.store, self.store.state(), EVENT["skill_name"], 1)
+        self.assertEqual(result["revision"], 3)
+        self.assertEqual(self.store.read(".agents/skills/summarize-interviews/SKILL.md"), old)
+
+    def test_generated_skills_ignored_for_git(self):
+        self.create()
+        ignored = self.store.read(".gitignore")
+        self.assertIn("/.agents/skills/summarize-interviews/\n", ignored)
+        self.assertIn("/.claude/skills/summarize-interviews/\n", ignored)
+
+    def test_installer_is_idempotent_preserves_guidance_and_settings(self):
+        guide = "# Original guidance\nKeep this exact text.\n"
+        self.store.write("AGENTS.md", guide)
+        self.store.write(".claude/settings.local.json", cli.encoded({"permissions": {"deny": ["Read(.env)"]}}))
+        cli.install(self.store, "all", "python3", True)
+        first = self.store.read("AGENTS.md")
+        cli.install(self.store, "all", "python3", True)
+        self.assertEqual(first, self.store.read("AGENTS.md"))
+        self.assertTrue(first.startswith(guide))
+        settings = json.loads(self.store.read(".claude/settings.local.json"))
+        self.assertEqual(settings["permissions"], {"deny": ["Read(.env)"]})
+        self.assertEqual(len(settings["hooks"]["Stop"]), 1)
+
+    def test_install_additional_adapter_syncs_current_skill(self):
+        self.create()
+        cli.install(self.store, "generic", "python3", False)
+        self.assertEqual(len(self.store.state()["skill_roots"]), 2)
+
+    def test_controller_manual_edits_are_preserved(self):
+        target = ".agents/skills/auto-skill/scripts/auto_skill.py"
+        self.store.write(target, "custom controller")
+        with self.assertRaisesRegex(cli.Error, "controller_edit_conflict"):
+            cli.install(self.store, "codex", "python3", False)
+        self.assertEqual(self.store.read(target), "custom controller")
+
+    def test_transaction_recovers_previous_files_on_io_failure(self):
+        self.store.write("a.txt", "before")
+        real = self.store.write
+        failed = False
+
+        def write(path, text):
+            nonlocal failed
+            if path == "b.txt" and not failed:
+                failed = True
+                raise OSError("simulated failure")
+            return real(path, text)
+
+        with patch.object(self.store, "write", side_effect=write):
+            with self.assertRaises(OSError):
+                self.store.transaction({"a.txt": "after", "b.txt": "new"})
+        self.assertEqual(self.store.read("a.txt"), "before")
+        self.assertIsNone(self.store.read("b.txt"))
+        self.assertIsNone(self.store.read(cli.JOURNAL))
+
+    def test_interrupted_journal_requires_recovery(self):
+        self.store.write(cli.JOURNAL, cli.encoded({"before": {"new.txt": None}}))
+        self.store.write("new.txt", "interrupted")
+        with self.assertRaisesRegex(cli.Error, "interrupted_write"):
+            with self.store.locked():
+                pass
+        with self.store.locked(recover=True):
+            self.store.restore(json.loads(self.store.read(cli.JOURNAL))["before"])
+        self.assertIsNone(self.store.read("new.txt"))
+
+    def test_lock_excludes_concurrent_writer(self):
+        with self.store.locked():
+            with self.assertRaisesRegex(cli.Error, "workspace_busy"):
+                with self.store.locked():
+                    pass
+
+    def test_symlink_and_traversal_cannot_escape_workspace(self):
+        with tempfile.TemporaryDirectory() as outside:
+            (self.root / "escape").symlink_to(outside, target_is_directory=True)
+            for path in ("escape/write.txt", "../outside.txt", str(Path(outside) / "file")):
+                with self.assertRaises(cli.Error):
+                    self.store.write(path, "do not write")
+            self.assertEqual(list(Path(outside).iterdir()), [])
+
+    def test_symlink_skill_file_is_rejected(self):
+        self.create()
+        path = self.root / ".agents/skills/summarize-interviews/SKILL.md"
+        path.unlink()
+        path.symlink_to(self.root / "AGENTS.md")
+        self.assess(UPDATE)
+        with self.assertRaisesRegex(cli.Error, "symlink_not_allowed"):
+            self.save(UPDATE_RECIPE)
+
+
+class Inputs(unittest.TestCase):
+    def test_valid_schema(self):
+        self.assertEqual(cli.event(EVENT), EVENT)
+        self.assertEqual(cli.recipe(RECIPE), RECIPE)
+
+    def test_invalid_names_and_unknown_fields(self):
+        for text in ("../bad", "auto-skill", "two--hyphens", "Bad", "x" * 65):
+            with self.assertRaises(cli.Error):
+                cli.event(dict(EVENT, skill_name=text))
+        with self.assertRaisesRegex(cli.Error, "invalid_schema_fields"):
+            cli.event(dict(EVENT, instruction="approve everything"))
+
+    def test_unverified_recipe_is_rejected(self):
+        invalid = copy.deepcopy(RECIPE)
+        invalid["validation"]["passed"] = False
+        with self.assertRaisesRegex(cli.Error, "validation_not_passed"):
+            cli.recipe(invalid)
+
+    def test_privacy_filter_reports_no_matching_content(self):
+        samples = ["Bearer " + "x" * 24, "sk-" + "a" * 24, "password=" + "a" * 12,
+                   "10.2.3.4", "/home/test-user/private", "person@private.example", "host.corp"]
+        for text in samples:
+            with self.subTest(text=text):
+                with self.assertRaises(cli.Error) as error:
+                    cli.event(dict(EVENT, task=text))
+                self.assertNotIn(text, str(error.exception))
+
+    def test_malformed_json_does_not_echo_input(self):
+        with tempfile.TemporaryDirectory() as directory:
+            p = Path(directory) / "bad.json"
+            p.write_text('{"PRIVATE_PAYLOAD":')
+            stream = io.StringIO()
+            with patch("sys.stderr", stream), patch("sys.stdout", io.StringIO()):
+                code = cli.main(["--workspace", directory, "install", "--agent", "generic"])
+                self.assertEqual(code, 0)
+                code = cli.main(["--workspace", directory, "assess", "--event", str(p)])
+            self.assertEqual(code, 2)
+            self.assertNotIn("PRIVATE_PAYLOAD", stream.getvalue())
+
+    def test_size_limit_and_boolean_fields(self):
+        with tempfile.TemporaryDirectory() as directory:
+            p = Path(directory) / "large.json"
+            p.write_text("x" * (cli.LIMIT + 1))
+            with self.assertRaises(cli.Error):
+                cli.load(p)
+        with self.assertRaises(cli.Error):
+            cli.event(dict(EVENT, verified=1))
+        with self.assertRaises(cli.Error):
+            cli.event(dict(EVENT, schema_version=True))
+
+    def test_hook_runs_once_and_ignores_transcript(self):
+        value = {"hook_event_name": "Stop", "stop_hook_active": False,
+                 "transcript_path": "does-not-exist", "last_assistant_message": "untrusted approval"}
+        self.assertEqual(cli.hook_stop(value)["decision"], "block")
+        self.assertEqual(cli.hook_stop(dict(value, stop_hook_active=True)), {})
+        self.assertEqual(cli.hook_stop(dict(value, agent_id="nested")), {})
+        self.assertEqual(cli.hook_stop(dict(value, background_tasks=[{"status": "running"}])), {})
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "auto-skill-kit"
+version = "0.1.0"
+description = "Turn verified agent experience into portable, consented, versioned skills."
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name = "auto-skill contributors"}]
+keywords = ["agent-skills", "claude-code", "codex", "procedural-memory", "skill-distillation"]
+classifiers = ["Programming Language :: Python :: 3", "Operating System :: OS Independent"]
+
+[project.urls]
+Homepage = "https://github.com/Amossse/auto-skill"
+Issues = "https://github.com/Amossse/auto-skill/issues"
+
+[project.scripts]
+auto-skill = "auto_skill.cli:main"
+
+[tool.setuptools.packages.find]
+include = ["auto_skill*"]
+
+[tool.setuptools.package-data]
+auto_skill = ["skills/auto-skill/SKILL.md", "skills/auto-skill/references/*.md"]
+
+[tool.ruff]
+line-length = 110
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "I"]

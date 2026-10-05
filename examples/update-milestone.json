@@ -1,0 +1,15 @@
+{
+  "schema_version": 1,
+  "session_id": "synthetic-session-2",
+  "milestone_id": "interview-2",
+  "skill_name": "summarize-interviews",
+  "scope": "Summarize anonymized interview notes using only supplied evidence.",
+  "task": "Summarize fictional excerpts with conflicting participant preferences.",
+  "outcome": "success",
+  "verified": true,
+  "lessons": [{
+    "kind": "procedure",
+    "finding": "Preserve conflicting preferences rather than merging them into consensus.",
+    "evidence": "The revised synthesis retained both opposing preferences and their excerpt IDs."
+  }]
+}
