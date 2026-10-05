@@ -25,12 +25,12 @@ Requires Python 3.10+ and a host agent with local file/shell access. The package
 GitHub, **not published on PyPI**. With [uv](https://docs.astral.sh/uv/):
 
 ```sh
-uv tool install git+https://github.com/Amossse/auto-skill.git@v0.1.0
+uv tool install git+https://github.com/Amossse/auto-skill.git@v0.1.1
 # Run inside the project where you want the experience skills to live:
 auto-skill --workspace . install --agent all
 ```
 
-Alternatively, `pipx install git+https://github.com/Amossse/auto-skill.git@v0.1.0`.
+Alternatively, `pipx install git+https://github.com/Amossse/auto-skill.git@v0.1.1`.
 For source development:
 
 ```sh
@@ -130,11 +130,11 @@ python scripts/demo.py
 Expected and locally observed output:
 
 ```text
-assess → ask (no skill created)
-simulated human approval → revision 1
-new same-scope milestone → revision 2 (no second question)
-rollback revision 1 → revision 3; Claude/Codex files match
-pause → local automatic updates disabled
+assess -> ask (no skill created)
+simulated human approval -> revision 1
+new same-scope milestone -> revision 2 (no second question)
+rollback revision 1 -> revision 3; Claude/Codex files match
+pause -> local automatic updates disabled
 PASS: offline lifecycle only; no real model evaluation
 ```
 

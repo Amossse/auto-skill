@@ -1,10 +1,10 @@
 # Validation report
 
-Release candidate: v0.1.0. Local checks performed on 2026-10-06.
+Release: v0.1.1. Local checks performed on 2026-10-06.
 
 ## Verified locally
 
-- 27 Python unit tests passed on Python 3.10 and 3.11.
+- 28 Python unit tests passed on Python 3.11; the original 27 also passed on Python 3.10.
 - The fictional offline lifecycle demo passed: ask without creating, explicit simulated approval,
   revision 1, same-scope revision 2 without another question, rollback as revision 3, and pause.
 - Codex/Claude generated skill contents matched in that demo.
@@ -35,7 +35,7 @@ The release environment did not complete either live host check:
   This did not establish whether the milestone workflow would trigger successfully.
 
 Therefore **proactive prompting, model-generated skill creation and later automatic iteration in
-real host sessions remain unverified** for v0.1.0. The installer and deterministic lifecycle are
+real host sessions remain unverified** for v0.1.1. The installer and deterministic lifecycle are
 tested; they are not a substitute for those host checks. Raw diagnostic output is not published.
 The optional Claude hook was unit-tested, not tested in an authenticated live Claude session.
 Generic hosts and Windows native-shell hook execution have not been live-tested.
@@ -45,6 +45,10 @@ Generic hosts and Windows native-shell hook execution have not been live-tested.
 GitHub Actions runs tests, the offline demo, compilation and lint on Linux (Python 3.10/3.13),
 macOS (3.11) and Windows (3.11). Consult the repository's Actions results for current run status;
 the workflow definition alone does not prove a run passed. CI does not invoke a paid agent model.
+
+The first v0.1.0 run passed unit tests on all four platforms but failed the Windows demo because
+its arrow character could not be printed with cp1252. v0.1.1 uses ASCII demo output and adds a
+regression test. The original release/tag is retained; install the corrected v0.1.1 tag.
 
 ## What this report does not prove
 

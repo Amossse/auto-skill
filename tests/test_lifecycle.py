@@ -1,6 +1,9 @@
 import copy
 import io
 import json
+import os
+import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -205,6 +208,13 @@ class Lifecycle(unittest.TestCase):
 
 
 class Inputs(unittest.TestCase):
+    def test_demo_handles_legacy_console_encoding(self):
+        # Windows redirected consoles may default to cp1252, not UTF-8.
+        result = subprocess.run([sys.executable, str(REPO / "scripts/demo.py")],
+                                env={**os.environ, "PYTHONIOENCODING": "cp1252"},
+                                capture_output=True, check=True)
+        self.assertIn(b"PASS: offline lifecycle only", result.stdout)
+
     def test_valid_schema(self):
         self.assertEqual(cli.event(EVENT), EVENT)
         self.assertEqual(cli.recipe(RECIPE), RECIPE)

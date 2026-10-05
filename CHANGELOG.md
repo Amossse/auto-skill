@@ -1,5 +1,10 @@
 # Changelog
 
+## 0.1.1 — 2026-10-06
+
+- Fix offline demo output on Windows legacy console encodings; add a cp1252 regression test.
+- Preserve v0.1.0 as published; recommend the corrected v0.1.1 tag for installation.
+
 ## 0.1.0 — 2026-10-06
 
 - Portable experience-distillation controller with verified milestone criteria and fresh-case validation.

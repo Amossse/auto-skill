@@ -17,12 +17,12 @@ auto-skill 是一个跨 Agent 的经验沉淀 Skill。任务完成、结果经�
 需要 Python 3.10+，以及支持本地文件和命令执行的 Agent。项目从 GitHub 安装，尚未发布到 PyPI。
 
 ```sh
-uv tool install git+https://github.com/Amossse/auto-skill.git@v0.1.0
+uv tool install git+https://github.com/Amossse/auto-skill.git@v0.1.1
 # 在希望保存经验的工作区内执行：
 auto-skill --workspace . install --agent all
 ```
 
-也可用 `pipx install git+https://github.com/Amossse/auto-skill.git@v0.1.0`。源码运行：
+也可用 `pipx install git+https://github.com/Amossse/auto-skill.git@v0.1.1`。源码运行：
 
 ```sh
 git clone https://github.com/Amossse/auto-skill.git
