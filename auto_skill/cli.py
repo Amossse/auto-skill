@@ -76,12 +76,21 @@ def name(value):
     return value
 
 
+def unique_object(pairs):
+    result = {}
+    for key, value in pairs:
+        if key in result:
+            raise ValueError("duplicate JSON field")
+        result[key] = value
+    return result
+
+
 def load(path, limit=LIMIT):
     path = Path(path)
     if not path.is_file() or path.stat().st_size > limit:
         raise Error("input_missing_or_too_large")
     try:
-        value = json.loads(path.read_text(encoding="utf-8"))
+        value = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=unique_object)
     except (ValueError, UnicodeError):
         raise Error("invalid_json") from None
     if not isinstance(value, dict):

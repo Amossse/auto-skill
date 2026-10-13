@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Reject duplicate JSON fields in event and recipe inputs, including nested validation fields, rather than silently accepting the last value.
+- Add negative regressions for ambiguous verification and validation records; consent and state formats are unchanged.
+
 ## 0.1.1 — 2026-10-06
 
 - Fix offline demo output on Windows legacy console encodings; add a cp1252 regression test.

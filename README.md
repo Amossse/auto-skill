@@ -176,6 +176,8 @@ do not run different trust domains concurrently against the same workspace.
 
 ## Limits and privacy
 
+Event and recipe inputs reject duplicate JSON fields, including nested validation fields, rather than silently keeping the last value.
+
 The model may miss milestones, overgeneralize, or give a poor validation record. Evidence links and
 revision history help inspect this, but no universal quality score or performance gain is promised.
 Updates currently rewrite a full merged recipe; older evidence stays in snapshots. There is no

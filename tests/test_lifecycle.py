@@ -18,6 +18,18 @@ UPDATE = json.loads((REPO / "examples/update-milestone.json").read_text())
 UPDATE_RECIPE = json.loads((REPO / "examples/update-recipe.json").read_text())
 
 
+class JsonInputs(unittest.TestCase):
+    def test_duplicate_top_level_and_nested_fields_are_rejected(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "input.json"
+            for raw in ('{"verified":false,"verified":true}',
+                        '{"validation":{"passed":false,"passed":true}}'):
+                with self.subTest(raw=raw):
+                    path.write_text(raw, encoding="utf-8")
+                    with self.assertRaises(cli.Error):
+                        cli.load(path)
+
+
 class Lifecycle(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
