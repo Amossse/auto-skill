@@ -19,6 +19,16 @@ UPDATE_RECIPE = json.loads((REPO / "examples/update-recipe.json").read_text())
 
 
 class JsonInputs(unittest.TestCase):
+    def test_read_limit_does_not_trust_stale_file_size(self):
+        with tempfile.TemporaryDirectory() as directory:
+            path = Path(directory) / "growing.json"
+            path.write_bytes(b"{}" + b" " * 64)
+            # A source may grow after its metadata was checked.
+            with patch.object(Path, "is_file", return_value=True), patch.object(Path, "stat") as metadata:
+                metadata.return_value.st_size = 1
+                with self.assertRaisesRegex(cli.Error, "input_missing_or_too_large"):
+                    cli.load(path, limit=32)
+
     def test_duplicate_top_level_and_nested_fields_are_rejected(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "input.json"

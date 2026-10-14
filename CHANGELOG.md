@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Bound actual event/recipe reads to the input budget plus one byte instead of trusting file-size metadata; growing files cannot bypass the size check.
+- Add a regression with stale size metadata while retaining strict UTF-8 decoding and duplicate-field rejection.
+
 - Reject duplicate JSON fields in event and recipe inputs, including nested validation fields, rather than silently accepting the last value.
 - Add negative regressions for ambiguous verification and validation records; consent and state formats are unchanged.
 

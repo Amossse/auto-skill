@@ -176,6 +176,8 @@ do not run different trust domains concurrently against the same workspace.
 
 ## Limits and privacy
 
+The input ceiling is enforced on bytes actually read, not file-size metadata; growing event/recipe files are rejected once they exceed the budget.
+
 Event and recipe inputs reject duplicate JSON fields, including nested validation fields, rather than silently keeping the last value.
 
 The model may miss milestones, overgeneralize, or give a poor validation record. Evidence links and

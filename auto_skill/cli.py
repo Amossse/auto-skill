@@ -87,10 +87,14 @@ def unique_object(pairs):
 
 def load(path, limit=LIMIT):
     path = Path(path)
-    if not path.is_file() or path.stat().st_size > limit:
+    if not path.is_file():
+        raise Error("input_missing_or_too_large")
+    with path.open("rb") as stream:
+        data = stream.read(limit + 1)
+    if len(data) > limit:
         raise Error("input_missing_or_too_large")
     try:
-        value = json.loads(path.read_text(encoding="utf-8"), object_pairs_hook=unique_object)
+        value = json.loads(data.decode("utf-8"), object_pairs_hook=unique_object)
     except (ValueError, UnicodeError):
         raise Error("invalid_json") from None
     if not isinstance(value, dict):
