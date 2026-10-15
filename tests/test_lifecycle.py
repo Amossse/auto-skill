@@ -230,6 +230,18 @@ class Lifecycle(unittest.TestCase):
 
 
 class Inputs(unittest.TestCase):
+    def test_unpaired_surrogates_are_rejected_before_lifecycle_operations(self):
+        for value in ("\ud800", "\udfff"):
+            with self.subTest(codepoint=ord(value)):
+                with self.assertRaisesRegex(cli.Error, "invalid_text_encoding"):
+                    cli.event(dict(EVENT, task=value))
+                draft = copy.deepcopy(RECIPE)
+                draft["steps"][0] = value
+                with self.assertRaisesRegex(cli.Error, "invalid_text_encoding"):
+                    cli.recipe(draft)
+        self.assertEqual(cli.event(dict(EVENT, task="Fictional study note \U0001f4da"))["task"],
+                         "Fictional study note \U0001f4da")
+
     def test_demo_handles_legacy_console_encoding(self):
         # Windows redirected consoles may default to cp1252, not UTF-8.
         result = subprocess.run([sys.executable, str(REPO / "scripts/demo.py")],

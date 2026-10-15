@@ -47,6 +47,10 @@ def digest(text):
 def safe_text(value):
     """Best-effort public-data filter; never echo the matching secret."""
     text = value if isinstance(value, str) else encoded(value)
+    try:
+        text.encode("utf-8")
+    except UnicodeError:
+        raise Error("invalid_text_encoding") from None
     if any(re.search(pattern, text, re.IGNORECASE) for pattern in PRIVATE_PATTERNS):
         raise Error("privacy_scan_failed: remove credentials, private endpoints, or personal paths")
     for address in re.findall(r"\b(?:\d{1,3}\.){3}\d{1,3}\b", text):

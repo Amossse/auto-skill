@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reject unpaired Unicode surrogates during event/recipe validation, before hashing or lifecycle writes; normal Unicode remains supported.
+
 - Bound actual event/recipe reads to the input budget plus one byte instead of trusting file-size metadata; growing files cannot bypass the size check.
 - Add a regression with stale size metadata while retaining strict UTF-8 decoding and duplicate-field rejection.
 

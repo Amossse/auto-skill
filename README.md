@@ -142,6 +142,7 @@ See [before/after](examples/before-after.md), [milestone input](examples/milesto
 [full recipe](examples/recipe.json), and [protocol reference](auto_skill/skills/auto-skill/references/protocol.md).
 The CLI is deterministic: the host agent writes these structured, sanitized records from real observations.
 `validation.passed=true` is an attestation by that host; the CLI validates its shape, not its truth.
+Event and recipe validation rejects unpaired Unicode surrogates before hashing or writing; valid Unicode, including emoji, remains supported.
 Hosts must try a fresh case and record actual results before saving. Do not copy example success records
 into a real workflow and present them as live validation.
 
