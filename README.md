@@ -143,6 +143,7 @@ See [before/after](examples/before-after.md), [milestone input](examples/milesto
 The CLI is deterministic: the host agent writes these structured, sanitized records from real observations.
 `validation.passed=true` is an attestation by that host; the CLI validates its shape, not its truth.
 Event and recipe validation rejects unpaired Unicode surrogates before hashing or writing; valid Unicode, including emoji, remains supported.
+Before reinstalling or synchronizing adapters, the current history content must match its managed-state hash. A mismatch stops installation before replacing files; preserve the workspace and inspect the snapshot rather than deleting history or bypassing the check. This detects inconsistency, not malicious changes to both state and history.
 Hosts must try a fresh case and record actual results before saving. Do not copy example success records
 into a real workflow and present them as live validation.
 

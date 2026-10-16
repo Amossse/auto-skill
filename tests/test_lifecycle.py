@@ -169,6 +169,21 @@ class Lifecycle(unittest.TestCase):
         cli.install(self.store, "generic", "python3", False)
         self.assertEqual(len(self.store.state()["skill_roots"]), 2)
 
+    def test_install_refuses_corrupt_snapshot_without_replacing_managed_files(self):
+        self.create()
+        state_before = self.store.read(cli.STATE)
+        paths = cli.skill_paths(self.store.state(), EVENT["skill_name"])
+        mirrors = {path: self.store.read(path) for path in paths}
+        history = f".auto-skill/history/{EVENT['skill_name']}/1.json"
+        snapshot = json.loads(self.store.read(history))
+        snapshot["content"] = "fictional corrupted snapshot"
+        self.store.write(history, cli.encoded(snapshot))
+        with self.assertRaisesRegex(cli.Error, "snapshot_content_mismatch"):
+            cli.install(self.store, "all", "python3", False)
+        self.assertEqual(self.store.read(cli.STATE), state_before)
+        self.assertEqual({path: self.store.read(path) for path in paths}, mirrors)
+        self.assertIsNone(self.store.read(cli.JOURNAL))
+
     def test_controller_manual_edits_are_preserved(self):
         target = ".agents/skills/auto-skill/scripts/auto_skill.py"
         self.store.write(target, "custom controller")

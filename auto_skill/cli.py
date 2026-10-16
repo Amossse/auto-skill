@@ -352,6 +352,9 @@ def install(store, agent, python_command, stop_hook):
     # New adapter: synchronize only skills still matching their managed content.
     for skill_name, current in state["skills"].items():
         snapshot = json.loads(store.read(f".auto-skill/history/{skill_name}/{current['revision']}.json"))
+        if (not isinstance(snapshot, dict) or not isinstance(snapshot.get("content"), str)
+                or digest(snapshot["content"]) != current["hash"]):
+            raise Error("snapshot_content_mismatch: preserve managed files and inspect local history")
         for path in skill_paths(state, skill_name):
             existing = store.read(path)
             if existing is not None and digest(existing) != current["hash"]:

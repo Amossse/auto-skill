@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Verify the current history snapshot's content hash before installation can synchronize managed skills; a mismatch leaves existing mirrors and state unchanged.
+
 - Reject unpaired Unicode surrogates during event/recipe validation, before hashing or lifecycle writes; normal Unicode remains supported.
 
 - Bound actual event/recipe reads to the input budget plus one byte instead of trusting file-size metadata; growing files cannot bypass the size check.
