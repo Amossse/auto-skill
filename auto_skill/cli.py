@@ -191,7 +191,12 @@ class Store:
             return None
         if not path.is_file() or path.stat().st_size > 8_000_000:
             raise Error("managed_file_invalid_or_too_large")
-        return path.read_text(encoding="utf-8")
+        with path.open("rb") as stream:
+            data = stream.read(8_000_000 + 1)
+        if len(data) > 8_000_000:
+            raise Error("managed_file_invalid_or_too_large")
+        # Match text-mode universal newlines, including Windows-generated mirrors.
+        return data.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
 
     def write(self, relative, text):
         path = self.path(relative)

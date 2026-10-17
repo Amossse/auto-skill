@@ -19,6 +19,19 @@ UPDATE_RECIPE = json.loads((REPO / "examples/update-recipe.json").read_text())
 
 
 class JsonInputs(unittest.TestCase):
+    def test_managed_read_limit_checks_actual_bytes_after_stale_metadata(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = cli.Store(directory)
+            file = Path(directory) / "fictional-state.json"
+            file.write_bytes(b"fictional\r\nstate\r")
+            self.assertEqual(store.read("fictional-state.json"), "fictional\nstate\n")
+            file.write_bytes(b" " * 8_000_001)
+            with patch.object(store, "path", return_value=file), patch.object(Path, "is_file", return_value=True), \
+                    patch.object(Path, "stat") as metadata:
+                metadata.return_value.st_size = 1
+                with self.assertRaisesRegex(cli.Error, "managed_file_invalid_or_too_large"):
+                    store.read("fictional-state.json")
+
     def test_read_limit_does_not_trust_stale_file_size(self):
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "growing.json"

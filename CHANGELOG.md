@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Bound managed state/history/instruction reads by actual bytes, retaining the 8,000,000-byte ceiling even if size metadata is stale; preserve universal-newline behavior on Windows.
+
 - Verify the current history snapshot's content hash before installation can synchronize managed skills; a mismatch leaves existing mirrors and state unchanged.
 
 - Reject unpaired Unicode surrogates during event/recipe validation, before hashing or lifecycle writes; normal Unicode remains supported.
