@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reject duplicate JSON fields in Stop-hook input, including ambiguous reentry guards, using the existing duplicate-field validator. Invalid events cannot request another check; valid active-hook events still return an empty response.
+
 - Bound managed state/history/instruction reads by actual bytes, retaining the 8,000,000-byte ceiling even if size metadata is stale; preserve universal-newline behavior on Windows.
 
 - Verify the current history snapshot's content hash before installation can synchronize managed skills; a mismatch leaves existing mirrors and state unchanged.

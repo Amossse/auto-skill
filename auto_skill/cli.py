@@ -537,7 +537,7 @@ def main(argv=None):
             raw = sys.stdin.read(LIMIT + 1)
             if len(raw.encode("utf-8")) > LIMIT:
                 raise Error("hook_input_too_large")
-            result = hook_stop(json.loads(raw))
+            result = hook_stop(json.loads(raw, object_pairs_hook=unique_object))
         else:
             store = Store(args.workspace)
             with store.locked(recover=args.command == "recover"):

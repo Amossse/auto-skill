@@ -77,6 +77,8 @@ python scripts/demo.py
 
 JSON 输入上限 256 KB，字段和名称有校验。安装器保留原有启动指令，只更新自己的标记区段；可配置 `--workspace`、`--agent`、`--python-command` 和 `--with-stop-hook`。
 
+Stop Hook 输入也拒绝重复 JSON 字段，避免同一事件的重入保护值含糊不清。无效输入只返回不含原文的错误，不再请求检查；宿主如何处理 Hook 错误仍取决于其设置。
+
 ```sh
 auto-skill status
 auto-skill consent --name summarize-interviews --decision pause

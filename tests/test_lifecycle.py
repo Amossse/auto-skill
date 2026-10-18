@@ -19,6 +19,19 @@ UPDATE_RECIPE = json.loads((REPO / "examples/update-recipe.json").read_text())
 
 
 class JsonInputs(unittest.TestCase):
+    def test_stop_hook_rejects_ambiguous_retry_guards_without_reentering(self):
+        command = [sys.executable, str(REPO / "auto_skill/cli.py"), "hook-stop"]
+        for raw in ('{"hook_event_name":"Stop","stop_hook_active":true,"stop_hook_active":false}',
+                    '{"hook_event_name":"Other","hook_event_name":"Stop","stop_hook_active":false}'):
+            result = subprocess.run(command, input=raw, text=True, encoding="utf-8", capture_output=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertEqual(result.stdout, "")
+            self.assertNotIn("stop_hook_active", result.stderr)
+            self.assertNotIn("Traceback", result.stderr)
+        valid = subprocess.run(command, input='{"hook_event_name":"Stop","stop_hook_active":true}',
+                               text=True, encoding="utf-8", capture_output=True, check=True)
+        self.assertEqual(json.loads(valid.stdout), {})
+
     def test_managed_read_limit_checks_actual_bytes_after_stale_metadata(self):
         with tempfile.TemporaryDirectory() as directory:
             store = cli.Store(directory)
