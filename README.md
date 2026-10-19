@@ -183,6 +183,8 @@ The input ceiling is enforced on bytes actually read, not file-size metadata; gr
 
 Event, recipe and Stop-hook inputs reject duplicate JSON fields, including nested validation fields and ambiguous hook reentry guards, rather than silently keeping the last value. Invalid hook input returns a non-echoing error without requesting another check; the host's handling of hook errors still depends on its settings.
 
+Event/recipe privacy checks also parse conventional IPv6 literals, rejecting private, loopback and link-local addresses without echoing them. Public IPv6 literals and ordinary time strings remain usable. This is still best-effort screening, not a guarantee for obfuscated addresses, internal content or personal data.
+
 The model may miss milestones, overgeneralize, or give a poor validation record. Evidence links and
 revision history help inspect this, but no universal quality score or performance gain is promised.
 Updates currently rewrite a full merged recipe; older evidence stays in snapshots. There is no

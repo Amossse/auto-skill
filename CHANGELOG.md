@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Extend best-effort privacy screening to private IPv6 literals, including loopback, unique-local, link-local and mapped private IPv4 forms. Validate with the standard library; preserve public IPv6 and ordinary time strings and never echo rejected addresses.
+
 - Reject duplicate JSON fields in Stop-hook input, including ambiguous reentry guards, using the existing duplicate-field validator. Invalid events cannot request another check; valid active-hook events still return an empty response.
 
 - Bound managed state/history/instruction reads by actual bytes, retaining the 8,000,000-byte ceiling even if size metadata is stale; preserve universal-newline behavior on Windows.

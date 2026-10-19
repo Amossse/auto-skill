@@ -59,6 +59,16 @@ def safe_text(value):
                 raise Error("privacy_scan_failed: remove private IP addresses")
         except ValueError:
             pass
+    # Parse literals rather than treating ordinary colon-separated text as an address.
+    for candidate in re.findall(r"[0-9A-Fa-f:.%]+", text):
+        if candidate.count(":") < 2:
+            continue
+        try:
+            address = ipaddress.IPv6Address(candidate.split("%", 1)[0].rstrip("."))
+        except ValueError:
+            continue
+        if address.is_private:
+            raise Error("privacy_scan_failed: remove private IP addresses")
     for address in re.findall(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", text):
         if address.rsplit("@", 1)[1] not in {"example.com", "example.org", "example.net"}:
             raise Error("privacy_scan_failed: remove personal email addresses")

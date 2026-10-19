@@ -271,6 +271,21 @@ class Lifecycle(unittest.TestCase):
 
 
 class Inputs(unittest.TestCase):
+    def test_private_ipv6_literals_are_rejected_without_echoing_them(self):
+        for address in ("fd00" + "::1234", "fe80" + "::1234%eth0", "::" + "1", "::ffff:" + "127.0.0.1"):
+            with self.subTest(address=address):
+                for text in (address, f"https://[{address}]:8443/example", f"Fictional endpoint {address}."):
+                    with self.assertRaisesRegex(cli.Error, "privacy_scan_failed") as error:
+                        cli.event(dict(EVENT, task=text))
+                    self.assertNotIn(address, str(error.exception))
+                    draft = copy.deepcopy(RECIPE)
+                    draft["steps"][0] = text
+                    with self.assertRaisesRegex(cli.Error, "privacy_scan_failed"):
+                        cli.recipe(draft)
+        public = "2606:4700:4700::1111"
+        self.assertEqual(cli.event(dict(EVENT, task=public))["task"], public)
+        self.assertEqual(cli.event(dict(EVENT, task="Fictional time 12:30:00"))["task"], "Fictional time 12:30:00")
+
     def test_unpaired_surrogates_are_rejected_before_lifecycle_operations(self):
         for value in ("\ud800", "\udfff"):
             with self.subTest(codepoint=ord(value)):
