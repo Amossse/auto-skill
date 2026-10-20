@@ -185,6 +185,8 @@ Event, recipe and Stop-hook inputs reject duplicate JSON fields, including neste
 
 Event/recipe privacy checks also parse conventional IPv6 literals, rejecting private, loopback and link-local addresses without echoing them. Public IPv6 literals and ordinary time strings remain usable. This is still best-effort screening, not a guarantee for obfuscated addresses, internal content or personal data.
 
+A fictional subprocess regression pauses consent after an update is assessed but before saving its pending draft. The rejected save preserves all workspace file bytes and pending evidence; only simulated explicit reapproval permits revision 2. This adds coverage to existing behavior, not speaker authentication or real-host validation.
+
 The model may miss milestones, overgeneralize, or give a poor validation record. Evidence links and
 revision history help inspect this, but no universal quality score or performance gain is promised.
 Updates currently rewrite a full merged recipe; older evidence stays in snapshots. There is no

@@ -146,6 +146,30 @@ class Lifecycle(unittest.TestCase):
         self.assertEqual(self.assess(UPDATE)["reason"], "pause")
         self.assertIsNotNone(self.store.read(".agents/skills/summarize-interviews/SKILL.md"))
 
+    def test_pause_after_assessment_blocks_pending_draft_until_explicit_resume(self):
+        self.create()
+        self.assertEqual(self.assess(UPDATE)["action"], "update")
+        draft = self.root / "fictional-draft.json"
+        draft.write_text(json.dumps(UPDATE_RECIPE), encoding="utf-8")
+        command = [sys.executable, str(REPO / "auto_skill/cli.py"), "--workspace", str(self.root)]
+        subprocess.run(command + ["consent", "--name", EVENT["skill_name"], "--decision", "pause"],
+                       capture_output=True, check=True)
+
+        def snapshot():
+            return {path.relative_to(self.root).as_posix(): path.read_bytes()
+                    for path in self.root.rglob("*") if path.is_file()}
+
+        paused = snapshot()
+        result = subprocess.run(command + ["save", "--recipe", str(draft)], capture_output=True)
+        self.assertEqual(result.returncode, 2)
+        self.assertIn(b"consent_required", result.stderr)
+        self.assertEqual(snapshot(), paused)
+        self.assertIn(EVENT["skill_name"], self.store.state()["pending"])
+        subprocess.run(command + ["consent", "--name", EVENT["skill_name"], "--decision", "approve"],
+                       capture_output=True, check=True)
+        resumed = subprocess.run(command + ["save", "--recipe", str(draft)], capture_output=True, check=True)
+        self.assertEqual(json.loads(resumed.stdout)["revision"], 2)
+
     def test_manual_edit_is_never_overwritten(self):
         self.create()
         path = ".agents/skills/summarize-interviews/SKILL.md"
