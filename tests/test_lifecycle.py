@@ -19,6 +19,27 @@ UPDATE_RECIPE = json.loads((REPO / "examples/update-recipe.json").read_text())
 
 
 class JsonInputs(unittest.TestCase):
+    def test_unicode_scope_survives_legacy_stdout_without_changing_storage(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            command = [sys.executable, str(REPO / "auto_skill/cli.py"), "--workspace", str(root)]
+            environment = {**os.environ, "PYTHONIOENCODING": "cp1252"}
+            subprocess.run(command + ["install", "--agent", "generic"], env=environment,
+                           capture_output=True, check=True)
+            event = {**EVENT, "scope": "整理虚构访谈记录 📚"}
+            source = root / "event.json"
+            source.write_text(json.dumps(event, ensure_ascii=False), encoding="utf-8")
+            for args in (["assess", "--event", str(source)],
+                         ["consent", "--name", event["skill_name"], "--decision", "approve"], ["status"]):
+                result = subprocess.run(command + args, env=environment, capture_output=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+                result.stdout.decode("ascii")  # Transport is safe even on a legacy pipe.
+                parsed = json.loads(result.stdout)
+                if args[0] != "consent":
+                    self.assertIn(event["scope"], json.dumps(parsed, ensure_ascii=False))
+            state = root / ".auto-skill/state.json"
+            self.assertIn(event["scope"], state.read_text(encoding="utf-8"))
+
     def test_stop_hook_rejects_ambiguous_retry_guards_without_reentering(self):
         command = [sys.executable, str(REPO / "auto_skill/cli.py"), "hook-stop"]
         for raw in ('{"hook_event_name":"Stop","stop_hook_active":true,"stop_hook_active":false}',

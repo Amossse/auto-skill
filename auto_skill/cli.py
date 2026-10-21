@@ -571,7 +571,8 @@ def main(argv=None):
                         result = save(store, state, recipe(load(args.recipe)))
                     else:
                         result = rollback(store, state, args.name, args.revision)
-        print(encoded(result), end="")
+        # Escape the transport only; UTF-8 state, snapshots and their hashes stay unchanged.
+        print(json.dumps(result, ensure_ascii=True, indent=2, sort_keys=True))
         return 0
     except (Error, OSError, ValueError, TypeError, KeyError, AttributeError, RecursionError):
         error = sys.exc_info()[1]

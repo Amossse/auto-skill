@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Escape CLI JSON transport for legacy stdout encodings, preventing a successful state change from being reported as an encoding failure. Preserve UTF-8 storage and snapshot hashes; cover Unicode scopes through assessment, simulated approval and status under cp1252.
+
 - Cover pausing writes after an update was assessed but before its pending draft is saved. A separate save process must refuse it without changing workspace bytes, retain the draft, and save revision 2 only after simulated explicit reapproval. Runtime behavior is unchanged.
 
 - Extend best-effort privacy screening to private IPv6 literals, including loopback, unique-local, link-local and mapped private IPv4 forms. Validate with the standard library; preserve public IPv6 and ordinary time strings and never echo rejected addresses.

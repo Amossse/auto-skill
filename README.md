@@ -1,5 +1,7 @@
 # auto-skill
 
+CLI JSON output uses ASCII escapes so Unicode scopes survive legacy terminal/pipe encodings. JSON clients recover the original text; UTF-8 state, snapshots and their hashes are unchanged. A cp1252 subprocess regression covers assessment, simulated consent and status, not a real host or model.
+
 **Teach your agent once. Keep the experience as a skill.**
 
 auto-skill turns verified task experience into portable [Agent Skills](https://agentskills.io/specification).
