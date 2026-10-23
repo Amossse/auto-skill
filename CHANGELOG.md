@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reject duplicate fields in persisted workspace state for both lifecycle reads and installation. A conflicting pause/approve record fails closed instead of choosing the last value; subprocess regressions confirm status, reinstall and assessment leave workspace file bytes unchanged. No state migration or automatic repair.
+
 - Escape CLI JSON transport for legacy stdout encodings, preventing a successful state change from being reported as an encoding failure. Preserve UTF-8 storage and snapshot hashes; cover Unicode scopes through assessment, simulated approval and status under cp1252.
 
 - Cover pausing writes after an update was assessed but before its pending draft is saved. A separate save process must refuse it without changing workspace bytes, retain the draft, and save revision 2 only after simulated explicit reapproval. Runtime behavior is unchanged.

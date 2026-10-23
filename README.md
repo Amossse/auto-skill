@@ -181,6 +181,8 @@ do not run different trust domains concurrently against the same workspace.
 
 ## Limits and privacy
 
+Persisted workspace state rejects duplicate JSON fields at every depth, including conflicting consent decisions. Normal lifecycle commands and reinstallation stop without replacing files; restore a reviewed, unambiguous local backup before retrying. No automatic repair or deletion is performed. This is corruption handling, not speaker authentication or complete state-schema validation.
+
 The input ceiling is enforced on bytes actually read, not file-size metadata; growing event/recipe files are rejected once they exceed the budget.
 
 Event, recipe and Stop-hook inputs reject duplicate JSON fields, including nested validation fields and ambiguous hook reentry guards, rather than silently keeping the last value. Invalid hook input returns a non-echoing error without requesting another check; the host's handling of hook errors still depends on its settings.

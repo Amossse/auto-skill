@@ -268,7 +268,7 @@ class Store:
         data = self.read(STATE)
         if data is None:
             raise Error("not_installed: run install first")
-        value = json.loads(data)
+        value = json.loads(data, object_pairs_hook=unique_object)
         if value.get("version") != 1:
             raise Error("unsupported_state")
         return value
@@ -307,7 +307,8 @@ def install(store, agent, python_command, stop_hook):
         bundle = Path(__file__).parent.parent
     roots = [".claude/skills" if a == "claude" else ".agents/skills" for a in agents]
     old = store.read(STATE)
-    state = json.loads(old) if old else {"version": 1, "skills": {}, "consent": {}, "pending": {}, "seen": {}}
+    state = (json.loads(old, object_pairs_hook=unique_object) if old else
+             {"version": 1, "skills": {}, "consent": {}, "pending": {}, "seen": {}})
     roots = list(dict.fromkeys(state.get("skill_roots", []) + roots))
     changes = {}
     for root in roots:

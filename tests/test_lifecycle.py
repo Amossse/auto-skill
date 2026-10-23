@@ -88,6 +88,25 @@ class JsonInputs(unittest.TestCase):
 
 
 class Lifecycle(unittest.TestCase):
+    def test_ambiguous_persisted_consent_cannot_be_used_or_reinstalled(self):
+        self.create()
+        cli.consent(self.store, self.store.state(), EVENT["skill_name"], "pause")
+        path = self.root / cli.STATE
+        raw = path.read_text(encoding="utf-8")
+        ambiguous = raw.replace('"decision": "pause"', '"decision":"pause","decision":"approve"')
+        self.assertNotEqual(raw, ambiguous)
+        path.write_text(ambiguous, encoding="utf-8")
+        before = {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
+        command = [sys.executable, str(REPO / "auto_skill/cli.py"), "--workspace", str(self.root)]
+        for args in (["status"], ["install", "--agent", "generic"],
+                     ["assess", "--event", str(REPO / "examples/update-milestone.json")]):
+            result = subprocess.run(command + args, capture_output=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertNotIn(b"Traceback", result.stderr)
+            self.assertNotIn(b"approve", result.stderr)
+            after = {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
+            self.assertEqual(after, before)
+
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.addCleanup(self.temp.cleanup)
