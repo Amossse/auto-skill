@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Apply the existing state-version gate during reinstallation and require an exact integer version 1 in lifecycle reads. Reject unsupported, boolean, float and string versions without replacing workspace files; no automatic migration or complete state-schema validation.
+
 - Reject duplicate fields in persisted workspace state for both lifecycle reads and installation. A conflicting pause/approve record fails closed instead of choosing the last value; subprocess regressions confirm status, reinstall and assessment leave workspace file bytes unchanged. No state migration or automatic repair.
 
 - Escape CLI JSON transport for legacy stdout encodings, preventing a successful state change from being reported as an encoding failure. Preserve UTF-8 storage and snapshot hashes; cover Unicode scopes through assessment, simulated approval and status under cp1252.

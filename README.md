@@ -181,6 +181,8 @@ do not run different trust domains concurrently against the same workspace.
 
 ## Limits and privacy
 
+Workspace state must declare integer `version: 1`; booleans, floats and unsupported versions are refused. Reinstallation uses the same version gate as lifecycle commands instead of silently reinterpreting a different format. Files remain unchanged on rejection; use a compatible controller or a reviewed backup, not a manually relabeled version. No migration is performed; this is not complete state-schema validation.
+
 Persisted workspace state rejects duplicate JSON fields at every depth, including conflicting consent decisions. Normal lifecycle commands and reinstallation stop without replacing files; restore a reviewed, unambiguous local backup before retrying. No automatic repair or deletion is performed. This is corruption handling, not speaker authentication or complete state-schema validation.
 
 The input ceiling is enforced on bytes actually read, not file-size metadata; growing event/recipe files are rejected once they exceed the budget.
