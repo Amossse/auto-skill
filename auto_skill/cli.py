@@ -367,7 +367,8 @@ def install(store, agent, python_command, stop_hook):
     state["skill_roots"] = roots
     # New adapter: synchronize only skills still matching their managed content.
     for skill_name, current in state["skills"].items():
-        snapshot = json.loads(store.read(f".auto-skill/history/{skill_name}/{current['revision']}.json"))
+        snapshot = json.loads(store.read(f".auto-skill/history/{skill_name}/{current['revision']}.json"),
+                              object_pairs_hook=unique_object)
         if (not isinstance(snapshot, dict) or not isinstance(snapshot.get("content"), str)
                 or digest(snapshot["content"]) != current["hash"]):
             raise Error("snapshot_content_mismatch: preserve managed files and inspect local history")
@@ -489,7 +490,7 @@ def rollback(store, state, skill_name, revision):
     snapshot_text = store.read(f".auto-skill/history/{skill_name}/{revision}.json")
     if snapshot_text is None:
         raise Error("unknown_revision")
-    snapshot = json.loads(snapshot_text)
+    snapshot = json.loads(snapshot_text, object_pairs_hook=unique_object)
     text = snapshot["content"]
     safe_text(text)
     new_revision = state["skills"][skill_name]["revision"] + 1

@@ -88,6 +88,23 @@ class JsonInputs(unittest.TestCase):
 
 
 class Lifecycle(unittest.TestCase):
+    def test_ambiguous_history_cannot_be_installed_or_rolled_back(self):
+        self.create()
+        history = self.root / ".auto-skill/history/summarize-interviews/1.json"
+        raw = history.read_text(encoding="utf-8")
+        history.write_text(raw.replace('"content":', '"content":"Fictional ambiguous marker","content":', 1),
+                           encoding="utf-8")
+        before = {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
+        command = [sys.executable, str(REPO / "auto_skill/cli.py"), "--workspace", str(self.root)]
+        for args in (["install", "--agent", "generic"],
+                     ["rollback", "--name", "summarize-interviews", "--revision", "1"]):
+            result = subprocess.run(command + args, capture_output=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertNotIn(b"Traceback", result.stderr)
+            self.assertNotIn(b"Fictional ambiguous marker", result.stderr)
+            after = {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
+            self.assertEqual(after, before)
+
     def test_unsupported_state_version_blocks_status_and_reinstallation(self):
         original = self.store.state()
         command = [sys.executable, str(REPO / "auto_skill/cli.py"), "--workspace", str(self.root)]

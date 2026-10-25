@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reject duplicate JSON fields in history snapshots during adapter installation and rollback, reusing the existing strict parser. Leave all workspace files unchanged on ambiguous history; no automatic repair, migration or added authenticity guarantee.
+
 - Apply the existing state-version gate during reinstallation and require an exact integer version 1 in lifecycle reads. Reject unsupported, boolean, float and string versions without replacing workspace files; no automatic migration or complete state-schema validation.
 
 - Reject duplicate fields in persisted workspace state for both lifecycle reads and installation. A conflicting pause/approve record fails closed instead of choosing the last value; subprocess regressions confirm status, reinstall and assessment leave workspace file bytes unchanged. No state migration or automatic repair.

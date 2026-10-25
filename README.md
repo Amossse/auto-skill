@@ -146,6 +146,7 @@ The CLI is deterministic: the host agent writes these structured, sanitized reco
 `validation.passed=true` is an attestation by that host; the CLI validates its shape, not its truth.
 Event and recipe validation rejects unpaired Unicode surrogates before hashing or writing; valid Unicode, including emoji, remains supported.
 Before reinstalling or synchronizing adapters, the current history content must match its managed-state hash. A mismatch stops installation before replacing files; preserve the workspace and inspect the snapshot rather than deleting history or bypassing the check. This detects inconsistency, not malicious changes to both state and history.
+History snapshots also reject duplicate JSON fields at every object depth during installation and rollback. Ambiguous content or scope stops the operation without changing workspace files. Restore a reviewed, unambiguous local backup before retrying; this adds no authenticity guarantee or automatic repair.
 Managed files have an 8,000,000-byte read ceiling checked against actual bytes, not just size metadata. Oversized files stop the operation without truncating them; UTF-8 and universal-newline handling are preserved.
 Hosts must try a fresh case and record actual results before saving. Do not copy example success records
 into a real workflow and present them as live validation.
