@@ -88,6 +88,35 @@ class JsonInputs(unittest.TestCase):
 
 
 class Lifecycle(unittest.TestCase):
+    def test_invalid_recovery_snapshot_is_refused_before_any_restore(self):
+        self.store.write("a.txt", "Fictional current content")
+        snapshots = [
+            {"a.txt": "Fictional restored content", "../fictional-outside": None},
+            {"a.txt": "Fictional restored content", "": None},
+            {"a.txt": "Fictional restored content", ".agents": None},
+            {"a.txt": "Fictional restored content", "b.txt": 42},
+            {"a.txt": "Fictional restored content", "b.txt": "\ud800"},
+            [],
+        ]
+        journals = [json.dumps({"before": snapshot}) for snapshot in snapshots]
+        journals.append('{"before":{"a.txt":"Fictional first","a.txt":"Fictional second"}}')
+        command = [sys.executable, str(REPO / "auto_skill/cli.py"), "--workspace", str(self.root), "recover"]
+        for raw in journals:
+            self.store.write(cli.JOURNAL, raw)
+            before = {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
+            result = subprocess.run(command, capture_output=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertNotIn(b"Traceback", result.stderr)
+            self.assertNotIn(b"Fictional", result.stderr)
+            after = {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
+            self.assertEqual(after, before)
+        self.store.write("b.txt", "Fictional interrupted new file")
+        self.store.write(cli.JOURNAL, json.dumps({"before": {"a.txt": "Fictional restored content", "b.txt": None}}))
+        subprocess.run(command, capture_output=True, check=True)
+        self.assertEqual(self.store.read("a.txt"), "Fictional restored content")
+        self.assertIsNone(self.store.read("b.txt"))
+        self.assertIsNone(self.store.read(cli.JOURNAL))
+
     def test_ambiguous_history_cannot_be_installed_or_rolled_back(self):
         self.create()
         history = self.root / ".auto-skill/history/summarize-interviews/1.json"

@@ -257,6 +257,18 @@ class Store:
         self.unlink(JOURNAL)
 
     def restore(self, before):
+        if not isinstance(before, dict):
+            raise Error("invalid_recovery_snapshot")
+        # Reject structural/path/encoding errors before restoring even the first file.
+        for path, text in before.items():
+            if not isinstance(path, str) or (text is not None and not isinstance(text, str)):
+                raise Error("invalid_recovery_snapshot")
+            target = self.path(path)
+            if target == self.root or (target.exists() and not target.is_file()):
+                raise Error("invalid_recovery_snapshot")
+            path.encode("utf-8")
+            if text is not None:
+                text.encode("utf-8")
         for path, text in before.items():
             if text is None:
                 self.unlink(path)
@@ -558,7 +570,7 @@ def main(argv=None):
                 elif args.command == "recover":
                     journal = store.read(JOURNAL)
                     if journal:
-                        store.restore(json.loads(journal)["before"])
+                        store.restore(json.loads(journal, object_pairs_hook=unique_object)["before"])
                     result = {"action": "recovered" if journal else "nothing_to_recover"}
                 else:
                     state = store.state()

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Preflight recovery snapshot types, workspace paths, regular-file targets and UTF-8 text before restoring the first file; reject duplicate journal JSON fields. Malformed snapshots keep current files and the journal available for review. Cover traversal, directory targets, invalid values/encoding and a valid CLI restore; later filesystem failures are not made atomic.
+
 - Reject duplicate JSON fields in history snapshots during adapter installation and rollback, reusing the existing strict parser. Leave all workspace files unchanged on ambiguous history; no automatic repair, migration or added authenticity guarantee.
 
 - Apply the existing state-version gate during reinstallation and require an exact integer version 1 in lifecycle reads. Reject unsupported, boolean, float and string versions without replacing workspace files; no automatic migration or complete state-schema validation.

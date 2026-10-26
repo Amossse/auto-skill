@@ -180,6 +180,8 @@ If a process dies mid-write, confirm it is no longer running, inspect/remove onl
 journal. Never remove the journal first. Recovery is not protection against a hostile local process;
 do not run different trust domains concurrently against the same workspace.
 
+Recovery rejects duplicate journal JSON fields and preflights the full before-image for mapping/value types, workspace paths, nonregular targets and UTF-8 encoding before restoring any file. Invalid snapshots leave current files and the journal intact; inspect a reviewed backup rather than deleting evidence or retrying blindly. A valid recovery can still fail partway on later I/O errors; this is not a cross-file atomic restore or protection against concurrent hostile edits.
+
 ## Limits and privacy
 
 Workspace state must declare integer `version: 1`; booleans, floats and unsupported versions are refused. Reinstallation uses the same version gate as lifecycle commands instead of silently reinterpreting a different format. Files remain unchanged on rejection; use a compatible controller or a reviewed backup, not a manually relabeled version. No migration is performed; this is not complete state-schema validation.
