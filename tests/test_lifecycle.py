@@ -88,6 +88,35 @@ class JsonInputs(unittest.TestCase):
 
 
 class Lifecycle(unittest.TestCase):
+    def test_write_stream_setup_failure_closes_descriptor_and_preserves_target(self):
+        self.store.write("fictional.txt", "Fictional original")
+        original_mkstemp = cli.tempfile.mkstemp
+        opened = []
+
+        def record_open(*args, **kwargs):
+            descriptor, filename = original_mkstemp(*args, **kwargs)
+            opened.append(descriptor)
+            return descriptor, filename
+
+        try:
+            with patch.object(cli.tempfile, "mkstemp", record_open), \
+                    patch.object(cli.os, "fdopen", side_effect=OSError("Fictional stream setup failure")):
+                with self.assertRaises(OSError):
+                    self.store.write("fictional.txt", "Fictional replacement")
+            self.assertEqual(len(opened), 1)
+            with self.assertRaises(OSError):
+                os.fstat(opened[0])
+            self.assertEqual(self.store.read("fictional.txt"), "Fictional original")
+            self.assertFalse(list(self.root.glob(".auto-skill-*")))
+            self.store.write("fictional.txt", "Fictional retry")
+            self.assertEqual(self.store.read("fictional.txt"), "Fictional retry")
+        finally:
+            for descriptor in opened:
+                try:
+                    os.close(descriptor)
+                except OSError:
+                    pass
+
     def test_invalid_recovery_snapshot_is_refused_before_any_restore(self):
         self.store.write("a.txt", "Fictional current content")
         snapshots = [

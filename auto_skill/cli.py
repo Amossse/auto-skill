@@ -214,7 +214,12 @@ class Store:
         # Same-directory rename avoids exposing a half-written JSON or skill file.
         fd, temporary = tempfile.mkstemp(prefix=".auto-skill-", dir=path.parent)
         try:
-            with os.fdopen(fd, "w", encoding="utf-8") as stream:
+            try:
+                stream = os.fdopen(fd, "w", encoding="utf-8")
+            except BaseException:
+                os.close(fd)  # Ownership transfers only after stream construction.
+                raise
+            with stream:
                 stream.write(text)
                 stream.flush()
                 os.fsync(stream.fileno())

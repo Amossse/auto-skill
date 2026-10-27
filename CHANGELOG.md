@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Close the staged file descriptor if write-stream construction fails before ownership transfers. Retain temporary-file cleanup and original target bytes; a fault-injection regression verifies closure and a successful later retry. No broader crash-recovery guarantee.
+
 - Preflight recovery snapshot types, workspace paths, regular-file targets and UTF-8 text before restoring the first file; reject duplicate journal JSON fields. Malformed snapshots keep current files and the journal available for review. Cover traversal, directory targets, invalid values/encoding and a valid CLI restore; later filesystem failures are not made atomic.
 
 - Reject duplicate JSON fields in history snapshots during adapter installation and rollback, reusing the existing strict parser. Leave all workspace files unchanged on ambiguous history; no automatic repair, migration or added authenticity guarantee.

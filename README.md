@@ -184,6 +184,8 @@ Recovery rejects duplicate journal JSON fields and preflights the full before-im
 
 ## Limits and privacy
 
+If constructing a staged write stream fails, the controller closes its still-owned descriptor, removes the staging file and preserves the original target. Fault injection checks this boundary and a successful retry; it does not prove recovery from every filesystem or process failure.
+
 Workspace state must declare integer `version: 1`; booleans, floats and unsupported versions are refused. Reinstallation uses the same version gate as lifecycle commands instead of silently reinterpreting a different format. Files remain unchanged on rejection; use a compatible controller or a reviewed backup, not a manually relabeled version. No migration is performed; this is not complete state-schema validation.
 
 Persisted workspace state rejects duplicate JSON fields at every depth, including conflicting consent decisions. Normal lifecycle commands and reinstallation stop without replacing files; restore a reviewed, unambiguous local backup before retrying. No automatic repair or deletion is performed. This is corruption handling, not speaker authentication or complete state-schema validation.
