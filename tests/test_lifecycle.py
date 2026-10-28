@@ -88,6 +88,23 @@ class JsonInputs(unittest.TestCase):
 
 
 class Lifecycle(unittest.TestCase):
+    def test_recovery_rejects_file_parents_before_restoring_any_file(self):
+        self.store.write("a.txt", "Fictional current")
+        self.store.write("blocked", "Fictional parent file")
+        self.store.write(cli.JOURNAL, json.dumps({"before": {
+            "a.txt": "Fictional restored", "blocked/child.txt": "Fictional child"}}))
+        before = {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
+        command = [sys.executable, str(REPO / "auto_skill/cli.py"), "--workspace", str(self.root), "recover"]
+        rejected = subprocess.run(command, capture_output=True)
+        self.assertEqual(rejected.returncode, 2)
+        self.assertNotIn(b"Traceback", rejected.stderr)
+        self.assertNotIn(str(self.root).encode(), rejected.stderr)
+        self.assertEqual({p.relative_to(self.root): p.read_bytes() for p in self.root.rglob("*") if p.is_file()}, before)
+        self.store.write(cli.JOURNAL, json.dumps({"before": {"fresh/child.txt": "Fictional restored"}}))
+        subprocess.run(command, capture_output=True, check=True)
+        self.assertEqual(self.store.read("fresh/child.txt"), "Fictional restored")
+        self.assertIsNone(self.store.read(cli.JOURNAL))
+
     def test_write_stream_setup_failure_closes_descriptor_and_preserves_target(self):
         self.store.write("fictional.txt", "Fictional original")
         original_mkstemp = cli.tempfile.mkstemp

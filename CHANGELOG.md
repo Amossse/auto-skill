@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Reject file-valued parent paths during recovery preflight before restoring any entry. Cover unchanged workspace/journal bytes on rejection and valid missing-directory restoration; later I/O failures are not made atomic.
+
 - Close the staged file descriptor if write-stream construction fails before ownership transfers. Retain temporary-file cleanup and original target bytes; a fault-injection regression verifies closure and a successful later retry. No broader crash-recovery guarantee.
 
 - Preflight recovery snapshot types, workspace paths, regular-file targets and UTF-8 text before restoring the first file; reject duplicate journal JSON fields. Malformed snapshots keep current files and the journal available for review. Cover traversal, directory targets, invalid values/encoding and a valid CLI restore; later filesystem failures are not made atomic.

@@ -1,5 +1,7 @@
 # auto-skill
 
+Recovery preflight rejects targets whose parent path is occupied by a file before restoring any snapshot entry, preserving current files and the journal. Missing directories remain supported. Later I/O failures can still cause partial restoration; this is not a cross-file atomicity guarantee.
+
 CLI JSON output uses ASCII escapes so Unicode scopes survive legacy terminal/pipe encodings. JSON clients recover the original text; UTF-8 state, snapshots and their hashes are unchanged. A cp1252 subprocess regression covers assessment, simulated consent and status, not a real host or model.
 
 **Teach your agent once. Keep the experience as a skill.**

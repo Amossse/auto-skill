@@ -271,6 +271,11 @@ class Store:
             target = self.path(path)
             if target == self.root or (target.exists() and not target.is_file()):
                 raise Error("invalid_recovery_snapshot")
+            for parent in target.parents:
+                if parent == self.root:
+                    break
+                if parent.exists() and not parent.is_dir():
+                    raise Error("invalid_recovery_snapshot")
             path.encode("utf-8")
             if text is not None:
                 text.encode("utf-8")
