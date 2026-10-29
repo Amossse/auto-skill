@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Preflight duplicate normalized recovery targets and file/descendant path conflicts before any restoration. Cover both path orders, aliases, unchanged workspace/journal bytes and valid sibling restoration; no cross-file atomicity guarantee.
+
 - Reject file-valued parent paths during recovery preflight before restoring any entry. Cover unchanged workspace/journal bytes on rejection and valid missing-directory restoration; later I/O failures are not made atomic.
 
 - Close the staged file descriptor if write-stream construction fails before ownership transfers. Retain temporary-file cleanup and original target bytes; a fault-injection regression verifies closure and a successful later retry. No broader crash-recovery guarantee.

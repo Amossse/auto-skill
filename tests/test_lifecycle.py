@@ -88,6 +88,24 @@ class JsonInputs(unittest.TestCase):
 
 
 class Lifecycle(unittest.TestCase):
+    def test_overlapping_recovery_paths_are_refused_before_any_restore(self):
+        self.store.write("a.txt", "Fictional current")
+        command = [sys.executable, str(REPO / "auto_skill/cli.py"), "--workspace", str(self.root), "recover"]
+        for snapshot in ({"a.txt": "Fictional restored", "new": "Fictional parent", "new/child": "Fictional child"},
+                         {"a.txt": "Fictional restored", "new/child": None, "new": "Fictional parent"},
+                         {"a.txt": "Fictional first", "./a.txt": "Fictional second"}):
+            self.store.write(cli.JOURNAL, json.dumps({"before": snapshot}))
+            before = {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
+            result = subprocess.run(command, capture_output=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertNotIn(b"Traceback", result.stderr)
+            self.assertNotIn(str(self.root).encode(), result.stderr)
+            self.assertEqual({p.relative_to(self.root): p.read_bytes() for p in self.root.rglob("*") if p.is_file()}, before)
+        self.store.write(cli.JOURNAL, json.dumps({"before": {"fresh/one": "Fictional one", "fresh/two": "Fictional two"}}))
+        subprocess.run(command, capture_output=True, check=True)
+        self.assertEqual(self.store.read("fresh/one"), "Fictional one")
+        self.assertEqual(self.store.read("fresh/two"), "Fictional two")
+
     def test_recovery_rejects_file_parents_before_restoring_any_file(self):
         self.store.write("a.txt", "Fictional current")
         self.store.write("blocked", "Fictional parent file")

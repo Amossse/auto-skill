@@ -264,6 +264,7 @@ class Store:
     def restore(self, before):
         if not isinstance(before, dict):
             raise Error("invalid_recovery_snapshot")
+        targets = set()
         # Reject structural/path/encoding errors before restoring even the first file.
         for path, text in before.items():
             if not isinstance(path, str) or (text is not None and not isinstance(text, str)):
@@ -271,6 +272,9 @@ class Store:
             target = self.path(path)
             if target == self.root or (target.exists() and not target.is_file()):
                 raise Error("invalid_recovery_snapshot")
+            if target in targets:
+                raise Error("invalid_recovery_snapshot")
+            targets.add(target)
             for parent in target.parents:
                 if parent == self.root:
                     break
@@ -279,6 +283,9 @@ class Store:
             path.encode("utf-8")
             if text is not None:
                 text.encode("utf-8")
+        # Snapshot entries describe files, so none may also be another entry's directory.
+        if any(parent in targets for target in targets for parent in target.parents):
+            raise Error("invalid_recovery_snapshot")
         for path, text in before.items():
             if text is None:
                 self.unlink(path)

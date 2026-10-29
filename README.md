@@ -155,6 +155,8 @@ into a real workflow and present them as live validation.
 
 ## Implementation and configuration
 
+Recovery preflight also rejects duplicate normalized targets and ancestor/descendant entries within one snapshot, regardless of entry order, before changing any file. Distinct sibling files remain supported. This is lexical path validation, not a guarantee against filesystem-specific aliases or concurrent changes; later I/O failures can still interrupt restoration.
+
 Zero runtime dependencies beyond Python's standard library. No telemetry, model calls, network calls,
 transcript discovery, or generated-code execution occur inside the CLI.
 
