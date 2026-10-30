@@ -459,6 +459,27 @@ class Lifecycle(unittest.TestCase):
 
 
 class Inputs(unittest.TestCase):
+    def test_temporary_access_key_ids_are_refused_without_workspace_changes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            workspace = root / "workspace"
+            workspace.mkdir()
+            command = [sys.executable, str(REPO / "auto_skill/cli.py"), "--workspace", str(workspace)]
+            subprocess.run(command + ["install", "--agent", "generic"], capture_output=True, check=True)
+            before = {p.relative_to(workspace): p.read_bytes() for p in workspace.rglob("*") if p.is_file()}
+            source = root / "fictional-event.json"
+            for prefix in ("AKIA", "ASIA"):
+                marker = prefix + "Q" * 16  # Constructed identifier; no real credential is used.
+                source.write_text(json.dumps({**EVENT, "task": f"Fictional sample {marker}"}), encoding="utf-8")
+                rejected = subprocess.run(command + ["assess", "--event", str(source)], capture_output=True)
+                self.assertEqual(rejected.returncode, 2)
+                self.assertIn(b"privacy_scan_failed", rejected.stderr)
+                self.assertNotIn(marker.encode(), rejected.stderr)
+                self.assertEqual({p.relative_to(workspace): p.read_bytes() for p in workspace.rglob("*") if p.is_file()}, before)
+                draft = {**RECIPE, "steps": [f"Fictional step {marker}"]}
+                with self.assertRaisesRegex(cli.Error, "privacy_scan_failed"):
+                    cli.recipe(draft)
+
     def test_private_ipv6_literals_are_rejected_without_echoing_them(self):
         for address in ("fd00" + "::1234", "fe80" + "::1234%eth0", "::" + "1", "::ffff:" + "127.0.0.1"):
             with self.subTest(address=address):

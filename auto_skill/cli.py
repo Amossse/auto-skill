@@ -23,7 +23,7 @@ JOURNAL = ".auto-skill/transaction.json"
 PRIVATE_PATTERNS = [
     r"-----BEGIN (?:[A-Z]+ )?PRIVATE KEY-----",
     r"\b(?:sk-[A-Za-z0-9_-]{12,}|gh[pousr]_[A-Za-z0-9]{20,}|github_pat_[A-Za-z0-9_]{20,})\b",
-    r"\bAKIA[A-Z0-9]{16}\b",
+    r"\b(?:AKIA|ASIA)[A-Z0-9]{16}\b",
     r"\bBearer\s+[A-Za-z0-9._~+/-]{12,}",
     r"\b(?:api[_-]?key|password|secret|token)\s*[:=]\s*['\"]?[^\s'\"]{8,}",
     r"(?:/Users/|/home/|[A-Za-z]:\\Users\\)[^\s]+",
