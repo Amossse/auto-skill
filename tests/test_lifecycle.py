@@ -459,6 +459,18 @@ class Lifecycle(unittest.TestCase):
 
 
 class Inputs(unittest.TestCase):
+    def test_fictional_email_domains_ignore_case_without_rewriting_text(self):
+        for domain in ("EXAMPLE.COM", "Example.Org", "example.NET"):
+            body = f"Fictional contact PERSON@{domain}"
+            self.assertEqual(cli.event({**EVENT, "task": body})["task"], body)
+            self.assertEqual(cli.recipe({**RECIPE, "steps": [body]})["steps"], [body])
+        marker = "PERSON@UNLISTED.INVALID"
+        for validate, value in ((cli.event, {**EVENT, "task": f"Fictional {marker}"}),
+                                (cli.recipe, {**RECIPE, "steps": [f"Fictional {marker}"]})):
+            with self.assertRaisesRegex(cli.Error, "privacy_scan_failed") as rejected:
+                validate(value)
+            self.assertNotIn(marker, str(rejected.exception))
+
     def test_temporary_access_key_ids_are_refused_without_workspace_changes(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()

@@ -70,7 +70,7 @@ def safe_text(value):
         if address.is_private:
             raise Error("privacy_scan_failed: remove private IP addresses")
     for address in re.findall(r"[\w.+-]+@[\w.-]+\.[A-Za-z]{2,}", text):
-        if address.rsplit("@", 1)[1] not in {"example.com", "example.org", "example.net"}:
+        if address.rsplit("@", 1)[1].lower() not in {"example.com", "example.org", "example.net"}:
             raise Error("privacy_scan_failed: remove personal email addresses")
     if re.search(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", text):
         raise Error("invalid_control_character")

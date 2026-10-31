@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Accept reserved fictional email domains case-insensitively in the shared event/recipe filter while preserving text. Cover mixed-case examples and continued non-echoing rejection of other domains; consent is unchanged.
+
 - Reject bare AWS STS access key IDs through the shared event/recipe credential filter. Cover unchanged assessment workspace bytes and non-echoing errors with constructed identifiers; no historical cleanup.
 
 - Preflight duplicate normalized recovery targets and file/descendant path conflicts before any restoration. Cover both path orders, aliases, unchanged workspace/journal bytes and valid sibling restoration; no cross-file atomicity guarantee.
