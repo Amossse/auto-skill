@@ -188,6 +188,8 @@ Recovery rejects duplicate journal JSON fields and preflights the full before-im
 
 ## Limits and privacy
 
+Windows user-home path screening accepts either raw or JSON-escaped backslash representation, so conventional drive-letter home paths cannot bypass the event/recipe filter through serialization. Fictional regressions check both representations, unchanged assessment workspace files and non-echoing errors. Obfuscated paths and other identifying content still require human review.
+
 Fictional email domains `example.com`, `example.org` and `example.net` are compared without domain letter case; event/recipe text retains its original spelling. Other email domains remain rejected without echoing them. This does not broaden consent or make screening a complete personal-data detector.
 
 The existing credential filter now also rejects bare AWS STS access key IDs beginning with `ASIA`, alongside `AKIA`, in event and recipe text. Fictional assessment regressions verify unchanged workspace files and non-echoing errors. Existing skills/history are not scanned or cleaned; screening remains best-effort.

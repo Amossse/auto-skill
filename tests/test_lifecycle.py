@@ -459,6 +459,27 @@ class Lifecycle(unittest.TestCase):
 
 
 class Inputs(unittest.TestCase):
+    def test_windows_home_paths_are_rejected_in_raw_and_structured_inputs(self):
+        home = "C:" + chr(92) + "Users" + chr(92) + "fictional" + chr(92) + "notes.txt"
+        for text in (home, home.replace("C:", "d:").replace("Users", "users")):
+            for value in (text, {**EVENT, "task": text}, {**RECIPE, "steps": [text]}):
+                with self.assertRaisesRegex(cli.Error, "privacy_scan_failed") as rejected:
+                    cli.safe_text(value)
+                self.assertNotIn("fictional", str(rejected.exception))
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            workspace = root / "workspace"
+            workspace.mkdir()
+            command = [sys.executable, str(REPO / "auto_skill/cli.py"), "--workspace", str(workspace)]
+            subprocess.run(command + ["install", "--agent", "generic"], capture_output=True, check=True)
+            before = {p.relative_to(workspace): p.read_bytes() for p in workspace.rglob("*") if p.is_file()}
+            source = root / "fictional-event.json"
+            source.write_text(json.dumps({**EVENT, "task": home}), encoding="utf-8")
+            result = subprocess.run(command + ["assess", "--event", str(source)], capture_output=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertNotIn(b"fictional", result.stderr)
+            self.assertEqual({p.relative_to(workspace): p.read_bytes() for p in workspace.rglob("*") if p.is_file()}, before)
+
     def test_fictional_email_domains_ignore_case_without_rewriting_text(self):
         for domain in ("EXAMPLE.COM", "Example.Org", "example.NET"):
             body = f"Fictional contact PERSON@{domain}"

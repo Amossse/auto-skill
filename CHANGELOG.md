@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Screen conventional Windows home paths in both raw text and JSON-escaped event/recipe representations. Cover unchanged assessment workspace bytes and non-echoing diagnostics with fictional paths only; no historical cleanup.
+
 - Accept reserved fictional email domains case-insensitively in the shared event/recipe filter while preserving text. Cover mixed-case examples and continued non-echoing rejection of other domains; consent is unchanged.
 
 - Reject bare AWS STS access key IDs through the shared event/recipe credential filter. Cover unchanged assessment workspace bytes and non-echoing errors with constructed identifiers; no historical cleanup.

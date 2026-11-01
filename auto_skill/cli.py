@@ -26,7 +26,7 @@ PRIVATE_PATTERNS = [
     r"\b(?:AKIA|ASIA)[A-Z0-9]{16}\b",
     r"\bBearer\s+[A-Za-z0-9._~+/-]{12,}",
     r"\b(?:api[_-]?key|password|secret|token)\s*[:=]\s*['\"]?[^\s'\"]{8,}",
-    r"(?:/Users/|/home/|[A-Za-z]:\\Users\\)[^\s]+",
+    r"(?:/Users/|/home/|[A-Za-z]:(?:\\){1,2}Users(?:\\){1,2})[^\s]+",
     r"\b[a-z0-9.-]+\.(?:internal|corp|local)\b",
     r"\beyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\b",
 ]
