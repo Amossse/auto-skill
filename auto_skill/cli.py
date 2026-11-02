@@ -81,6 +81,9 @@ def string(value, key, maximum=2000):
     text = value.get(key)
     if not isinstance(text, str) or not text.strip() or len(text) > maximum:
         raise Error(f"invalid_field: {key}")
+    # Inspect raw fields before JSON serialization hides control characters.
+    if re.search(r"[\x00-\x08\x0b\x0c\x0e-\x1f]", text):
+        raise Error("invalid_control_character")
     return text.strip()
 
 

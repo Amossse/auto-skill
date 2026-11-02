@@ -459,6 +459,29 @@ class Lifecycle(unittest.TestCase):
 
 
 class Inputs(unittest.TestCase):
+    def test_structured_text_controls_are_refused_before_assessment(self):
+        for control in ("\x00", "\x08", "\x1b"):
+            for field in ("scope", "task"):
+                with self.assertRaisesRegex(cli.Error, "invalid_control_character"):
+                    cli.event({**EVENT, field: "Fictional" + control + "text"})
+            draft = copy.deepcopy(RECIPE)
+            draft["validation"]["actual"] = "Fictional" + control + "result"
+            with self.assertRaisesRegex(cli.Error, "invalid_control_character"):
+                cli.recipe(draft)
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory).resolve()
+            command = [sys.executable, str(REPO / "auto_skill/cli.py"), "--workspace", str(root)]
+            subprocess.run(command + ["install", "--agent", "generic"], capture_output=True, check=True)
+            source = root / "fictional-event.json"
+            source.write_text(json.dumps({**EVENT, "task": "Fictional\x00task"}), encoding="utf-8")
+            before = {p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()}
+            result = subprocess.run(command + ["assess", "--event", str(source)], capture_output=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn(b"invalid_control_character", result.stderr)
+            self.assertNotIn(b"Fictional", result.stderr)
+            self.assertEqual({p.relative_to(root): p.read_bytes() for p in root.rglob("*") if p.is_file()}, before)
+        self.assertEqual(cli.event({**EVENT, "task": "Fictional\nUnicode 样例\ttext"})["verified"], EVENT["verified"])
+
     def test_windows_home_paths_are_rejected_in_raw_and_structured_inputs(self):
         home = "C:" + chr(92) + "Users" + chr(92) + "fictional" + chr(92) + "notes.txt"
         for text in (home, home.replace("C:", "d:").replace("Users", "users")):
