@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Inspect opened event/recipe descriptors with nonblocking regular-file checks before reading. Close rejected descriptors, preserve source bytes and permit valid retry; leave hook stdin and managed-state reading unchanged.
+
 - Check raw event/recipe text fields for disallowed controls before JSON escaping hides them. Cover structured-field refusal, unchanged assessment files, non-echoing diagnostics and retained newline/tab/Unicode support.
 
 - Screen conventional Windows home paths in both raw text and JSON-escaped event/recipe representations. Cover unchanged assessment workspace bytes and non-echoing diagnostics with fictional paths only; no historical cleanup.

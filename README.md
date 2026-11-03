@@ -188,6 +188,8 @@ Recovery rejects duplicate journal JSON fields and preflights the full before-im
 
 ## Limits and privacy
 
+Named event/recipe inputs check the opened descriptor for a regular file before reading. Nonblocking opens prevent a substituted FIFO from waiting for a writer on POSIX; rejected descriptors close without modifying source bytes. This narrows a path-check race, not all filesystem races, and leaves hook stdin behavior unchanged.
+
 Event and recipe text fields now reject the existing disallowed control-character set before JSON serialization can hide NUL, backspace or ESC as escapes. Regressions preserve assessment workspace files and non-echoing diagnostics; newline, tab and ordinary Unicode remain accepted. This does not expand consent or make the privacy scan complete.
 
 Windows user-home path screening accepts either raw or JSON-escaped backslash representation, so conventional drive-letter home paths cannot bypass the event/recipe filter through serialization. Fictional regressions check both representations, unchanged assessment workspace files and non-echoing errors. Obfuscated paths and other identifying content still require human review.

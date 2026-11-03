@@ -2,11 +2,13 @@ import copy
 import io
 import json
 import os
+import stat
 import subprocess
 import sys
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from auto_skill import cli
@@ -19,6 +21,49 @@ UPDATE_RECIPE = json.loads((REPO / "examples/update-recipe.json").read_text())
 
 
 class JsonInputs(unittest.TestCase):
+    @unittest.skipUnless(hasattr(os, "mkfifo"), "POSIX FIFO check")
+    def test_fifo_substitution_does_not_wait_for_a_writer(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "fictional.pipe"
+            os.mkfifo(source)
+            code = """import sys
+from pathlib import Path
+from unittest.mock import patch
+from auto_skill import cli
+try:
+    with patch.object(Path, 'is_file', return_value=True):
+        cli.load(sys.argv[1])
+except cli.Error as error:
+    print(str(error))
+    raise SystemExit(2)
+"""
+            result = subprocess.run([sys.executable, "-c", code, str(source)], capture_output=True, timeout=5)
+            self.assertEqual(result.returncode, 2)
+            self.assertIn(b"input_must_be_regular_file", result.stdout)
+            self.assertNotIn(str(source).encode(), result.stdout + result.stderr)
+            self.assertTrue(stat.S_ISFIFO(source.stat().st_mode))
+
+    def test_load_checks_the_opened_file_type_and_closes_rejected_descriptors(self):
+        with tempfile.TemporaryDirectory() as directory:
+            source = Path(directory) / "fictional.json"
+            source.write_bytes(b"{}")
+            opened, original = [], os.open
+
+            def track_open(*args, **kwargs):
+                descriptor = original(*args, **kwargs)
+                opened.append(descriptor)
+                return descriptor
+
+            with patch.object(cli.os, "open", side_effect=track_open), \
+                    patch.object(cli.os, "fstat", return_value=SimpleNamespace(st_mode=stat.S_IFIFO)):
+                with self.assertRaisesRegex(cli.Error, "input_must_be_regular_file"):
+                    cli.load(source)
+            self.assertEqual(len(opened), 1)
+            with self.assertRaises(OSError):
+                os.fstat(opened[0])
+            self.assertEqual(source.read_bytes(), b"{}")
+            self.assertEqual(cli.load(source), {})
+
     def test_unicode_scope_survives_legacy_stdout_without_changing_storage(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory).resolve()

@@ -8,6 +8,7 @@ import ipaddress
 import json
 import os
 import re
+import stat
 import sys
 import tempfile
 from contextlib import contextmanager
@@ -106,8 +107,16 @@ def load(path, limit=LIMIT):
     path = Path(path)
     if not path.is_file():
         raise Error("input_missing_or_too_large")
-    with path.open("rb") as stream:
-        data = stream.read(limit + 1)
+    # Inspect the opened object without waiting on a FIFO substituted after the path check.
+    flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_BINARY", 0)
+    descriptor = os.open(path, flags)
+    try:
+        if not stat.S_ISREG(os.fstat(descriptor).st_mode):
+            raise Error("input_must_be_regular_file")
+        with os.fdopen(descriptor, "rb", closefd=False) as stream:
+            data = stream.read(limit + 1)
+    finally:
+        os.close(descriptor)
     if len(data) > limit:
         raise Error("input_missing_or_too_large")
     try:
