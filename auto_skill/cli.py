@@ -103,20 +103,24 @@ def unique_object(pairs):
     return result
 
 
-def load(path, limit=LIMIT):
-    path = Path(path)
-    if not path.is_file():
-        raise Error("input_missing_or_too_large")
+def read_regular(path, limit, type_error):
     # Inspect the opened object without waiting on a FIFO substituted after the path check.
     flags = os.O_RDONLY | getattr(os, "O_NONBLOCK", 0) | getattr(os, "O_BINARY", 0)
     descriptor = os.open(path, flags)
     try:
         if not stat.S_ISREG(os.fstat(descriptor).st_mode):
-            raise Error("input_must_be_regular_file")
+            raise Error(type_error)
         with os.fdopen(descriptor, "rb", closefd=False) as stream:
-            data = stream.read(limit + 1)
+            return stream.read(limit + 1)
     finally:
         os.close(descriptor)
+
+
+def load(path, limit=LIMIT):
+    path = Path(path)
+    if not path.is_file():
+        raise Error("input_missing_or_too_large")
+    data = read_regular(path, limit, "input_must_be_regular_file")
     if len(data) > limit:
         raise Error("input_missing_or_too_large")
     try:
@@ -213,8 +217,7 @@ class Store:
             return None
         if not path.is_file() or path.stat().st_size > 8_000_000:
             raise Error("managed_file_invalid_or_too_large")
-        with path.open("rb") as stream:
-            data = stream.read(8_000_000 + 1)
+        data = read_regular(path, 8_000_000, "managed_file_invalid_or_too_large")
         if len(data) > 8_000_000:
             raise Error("managed_file_invalid_or_too_large")
         # Match text-mode universal newlines, including Windows-generated mirrors.

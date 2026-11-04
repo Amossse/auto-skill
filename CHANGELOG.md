@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Managed state reads verify the opened descriptor is a regular file and use nonblocking opens where supported.
+
 - Inspect opened event/recipe descriptors with nonblocking regular-file checks before reading. Close rejected descriptors, preserve source bytes and permit valid retry; leave hook stdin and managed-state reading unchanged.
 
 - Check raw event/recipe text fields for disallowed controls before JSON escaping hides them. Cover structured-field refusal, unchanged assessment files, non-echoing diagnostics and retained newline/tab/Unicode support.

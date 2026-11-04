@@ -21,6 +21,16 @@ UPDATE_RECIPE = json.loads((REPO / "examples/update-recipe.json").read_text())
 
 
 class JsonInputs(unittest.TestCase):
+    def test_managed_read_checks_opened_descriptor_type(self):
+        with tempfile.TemporaryDirectory() as directory:
+            store = cli.Store(directory)
+            path = Path(directory) / "fictional-state.json"
+            path.write_bytes(b"{}")
+            with patch.object(cli.os, "fstat", return_value=SimpleNamespace(st_mode=stat.S_IFIFO)):
+                with self.assertRaisesRegex(cli.Error, "managed_file_invalid_or_too_large"):
+                    store.read(path.name)
+            self.assertEqual(store.read(path.name), "{}")
+
     @unittest.skipUnless(hasattr(os, "mkfifo"), "POSIX FIFO check")
     def test_fifo_substitution_does_not_wait_for_a_writer(self):
         with tempfile.TemporaryDirectory() as directory:
