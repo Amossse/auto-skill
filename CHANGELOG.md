@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Hook installation rejects duplicate JSON fields in existing local settings before writing workspace files.
+
 - Managed state reads verify the opened descriptor is a regular file and use nonblocking opens where supported.
 
 - Inspect opened event/recipe descriptors with nonblocking regular-file checks before reading. Close rejected descriptors, preserve source bytes and permit valid retry; leave hook stdin and managed-state reading unchanged.

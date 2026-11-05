@@ -188,6 +188,8 @@ Recovery rejects duplicate journal JSON fields and preflights the full before-im
 
 ## Limits and privacy
 
+Hook installation rejects duplicate JSON fields in existing local settings before writing workspace files.
+
 
 Managed state reads verify the opened descriptor is a regular file and use nonblocking opens where supported.
 

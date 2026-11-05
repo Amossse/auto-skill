@@ -143,6 +143,19 @@ except cli.Error as error:
 
 
 class Lifecycle(unittest.TestCase):
+    def test_install_refuses_duplicate_hook_settings_without_writing(self):
+        settings = self.root / ".claude/settings.local.json"
+        settings.parent.mkdir(exist_ok=True)
+        settings.write_text('{"hooks":{"Stop":[]},"hooks":{"Stop":[]}}', encoding="utf-8")
+        before = {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
+        result = subprocess.run([sys.executable, str(REPO / "auto_skill/cli.py"),
+                                 "--workspace", str(self.root), "install", "--agent", "claude",
+                                 "--with-stop-hook"], capture_output=True)
+        self.assertEqual(result.returncode, 2)
+        self.assertNotIn(b"Traceback", result.stderr)
+        after = {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
+        self.assertEqual(before, after)
+
     def test_overlapping_recovery_paths_are_refused_before_any_restore(self):
         self.store.write("a.txt", "Fictional current")
         command = [sys.executable, str(REPO / "auto_skill/cli.py"), "--workspace", str(self.root), "recover"]

@@ -398,7 +398,7 @@ def install(store, agent, python_command, stop_hook):
     if stop_hook:
         settings_path = ".claude/settings.local.json"
         previous = store.read(settings_path)
-        settings = json.loads(previous) if previous else {}
+        settings = json.loads(previous, object_pairs_hook=unique_object) if previous else {}
         command = (
             f'{python_command} "${{CLAUDE_PROJECT_DIR}}/.claude/skills/auto-skill/scripts/auto_skill.py" '
             '--workspace "${CLAUDE_PROJECT_DIR}" hook-stop'
