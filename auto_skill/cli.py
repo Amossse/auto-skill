@@ -535,6 +535,9 @@ def rollback(store, state, skill_name, revision):
     if snapshot_text is None:
         raise Error("unknown_revision")
     snapshot = json.loads(snapshot_text, object_pairs_hook=unique_object)
+    if (not isinstance(snapshot, dict) or type(snapshot.get("revision")) is not int
+            or snapshot["revision"] != revision):
+        raise Error("snapshot_revision_mismatch")
     text = snapshot["content"]
     safe_text(text)
     new_revision = state["skills"][skill_name]["revision"] + 1

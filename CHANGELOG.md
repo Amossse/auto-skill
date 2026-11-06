@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Rollback requires the snapshot revision to be an integer matching the selected history revision. Mismatches stop restoration before workspace changes.
+
 - Hook installation rejects duplicate JSON fields in existing local settings before writing workspace files.
 
 - Managed state reads verify the opened descriptor is a regular file and use nonblocking opens where supported.

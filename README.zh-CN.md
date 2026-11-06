@@ -97,6 +97,8 @@ auto-skill rollback --name summarize-interviews --revision 1
 
 ## 限制和安全
 
+回滚要求快照中的版本号为整数，且与选定的历史版本一致。版本不符时会在修改工作区前停止恢复。
+
 安装钩子时会检查已有本地设置的重复 JSON 字段，发现歧义就停止写入工作区。
 
 

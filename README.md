@@ -188,6 +188,8 @@ Recovery rejects duplicate journal JSON fields and preflights the full before-im
 
 ## Limits and privacy
 
+Rollback requires the snapshot revision to be an integer matching the selected history revision. Mismatches stop restoration before workspace changes.
+
 Hook installation rejects duplicate JSON fields in existing local settings before writing workspace files.
 
 
