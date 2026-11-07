@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Rollback validates the saved event and recipe and reproduces the expected content before changing workspace files. Inconsistent content, scope, skill identity or lesson references are refused. This detects internal inconsistency, not coordinated tampering or historical truth.
+
 - Rollback requires the snapshot revision to be an integer matching the selected history revision. Mismatches stop restoration before workspace changes.
 
 - Hook installation rejects duplicate JSON fields in existing local settings before writing workspace files.

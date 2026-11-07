@@ -13,6 +13,8 @@ the approved scope**. After approval, later verified milestones update the skill
 [中文](README.zh-CN.md) · [Quick start](#five-minute-quick-start) · [Demo](#reproducible-example) ·
 [Validation](docs/validation.md) · [Security](SECURITY.md) · [Contribute](CONTRIBUTING.md)
 
+Rollback validates the saved event and recipe and reproduces the expected content before changing workspace files. Inconsistent content, scope, skill identity or lesson references are refused. This detects internal inconsistency, not coordinated tampering or historical truth.
+
 ## The problem
 
 You correct an agent several times before it gets a task right. A new session or another agent often

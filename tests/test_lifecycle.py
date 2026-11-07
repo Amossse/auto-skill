@@ -143,6 +143,29 @@ except cli.Error as error:
 
 
 class Lifecycle(unittest.TestCase):
+    def test_rollback_rejects_content_inconsistent_with_snapshot_evidence(self):
+        self.create()
+        history = self.root / ".auto-skill/history/summarize-interviews/1.json"
+        original = history.read_bytes()
+        snapshot = json.loads(original)
+        wrong_recipe = copy.deepcopy(snapshot)
+        wrong_recipe["recipe"]["scope"] = "Fictional unrelated scope"
+        wrong_content = {**snapshot, "content": "Fictional unrelated instructions"}
+        bad_reference = copy.deepcopy(snapshot)
+        bad_reference["recipe"]["lesson_indices"] = [999]
+        command = [sys.executable, str(REPO / "auto_skill/cli.py"), "--workspace", str(self.root),
+                   "rollback", "--name", "summarize-interviews", "--revision", "1"]
+        for malformed in (wrong_recipe, wrong_content, bad_reference):
+            history.write_text(json.dumps(malformed), encoding="utf-8")
+            before = {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob("*") if p.is_file()}
+            result = subprocess.run(command, capture_output=True)
+            self.assertEqual(result.returncode, 2)
+            self.assertNotIn(b"Traceback", result.stderr)
+            self.assertNotIn(b"Fictional", result.stderr)
+            self.assertEqual(before, {p.relative_to(self.root): p.read_bytes() for p in self.root.rglob("*") if p.is_file()})
+        history.write_bytes(original)
+        subprocess.run(command, capture_output=True, check=True)
+
     def test_rollback_rejects_history_with_a_different_revision(self):
         self.create()
         history = self.root / ".auto-skill/history/summarize-interviews/1.json"

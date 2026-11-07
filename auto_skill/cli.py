@@ -539,6 +539,13 @@ def rollback(store, state, skill_name, revision):
             or snapshot["revision"] != revision):
         raise Error("snapshot_revision_mismatch")
     text = snapshot["content"]
+    draft = recipe(snapshot["recipe"])
+    observation = event(snapshot["event"])
+    if (draft["skill_name"] != skill_name or observation["skill_name"] != skill_name
+            or draft["scope"] != observation["scope"]
+            or any(i >= len(observation["lessons"]) for i in draft["lesson_indices"])
+            or text != render(observation, draft)):
+        raise Error("snapshot_content_mismatch: inspect local history before retrying")
     safe_text(text)
     new_revision = state["skills"][skill_name]["revision"] + 1
     state["skills"][skill_name] = {"revision": new_revision, "hash": digest(text),
